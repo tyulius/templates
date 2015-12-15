@@ -26,6 +26,17 @@
         "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
       }
     },
+    "location":{
+      "type": "string",
+      "defaultValue": "West US",
+      "allowedValues": [
+        "West US",
+        "East US 2"
+      ],
+      "metadata": {
+        "description": "Restricts choice to where premium storage is located in the US"
+      }
+    },
     "windowsOSVersion": {
       "type": "string",
       "defaultValue": "2012-R2-Datacenter",
@@ -37,10 +48,16 @@
       "metadata": {
         "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version. Allowed values: 2008-R2-SP1, 2012-Datacenter, 2012-R2-Datacenter."
       }
+    },
+  
+  "sizeOfEachDataDiskInGB":{
+    "type": "string",
+    "metadata":{
+      "description": "Size of each data in GB"
     }
   },
+ 
   "variables": {
-    "location": "West US",
     "imagePublisher": "MicrosoftWindowsServer",
     "imageOffer": "WindowsServer",
     "OSDiskName": "osdiskforwindowssimple",
@@ -56,8 +73,11 @@
     "vmSize": "Standard_A2",
     "virtualNetworkName": "MyVNET",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
-    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
   },
+  "dataDisk1VhdName":
+  "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('vmName'),'dataDisk1.vhd')]"
+
   "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
@@ -159,8 +179,18 @@
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
-          }
         },
+        "dataDisk":[
+          {
+            "name": "datadisk1",
+            "diskSizeGB": "[parameters('sizeOfDiskInGB')]",
+            "lun": 0,
+            "vhd": {
+              "Url": "[variables('dataDisk1VhdName')]"
+            },
+          ]
+          },
+        
         "networkProfile": {
           "networkInterfaces": [
             {
